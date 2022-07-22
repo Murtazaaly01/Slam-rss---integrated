@@ -89,7 +89,7 @@ class MirrorListener(listeners.MirrorListeners):
                     download_dict[self.uid] = TarStatus(name, m_path, size)
                 if self.isZip:
                     pswd = self.pswd
-                    path = m_path + ".zip"
+                    path = f"{m_path}.zip"
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                     if pswd is not None:
                         subprocess.run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
@@ -373,12 +373,8 @@ def _mirror(bot, update, isTar=False, extract=False, isZip=False, isQbit=False, 
     link = link.strip()
     reply_to = update.message.reply_to_message
     if reply_to is not None:
-        file = None
         media_array = [reply_to.document, reply_to.video, reply_to.audio]
-        for i in media_array:
-            if i is not None:
-                file = i
-                break
+        file = next((i for i in media_array if i is not None), None)
         try:
             reply_text = re.search(URI_REGEX, reply_to.text)
             LOGGER.info(f"URL extracted: {reply_text[0]}")
@@ -445,8 +441,7 @@ def _mirror(bot, update, isTar=False, extract=False, isZip=False, isQbit=False, 
             sendMessage(res, bot, update)
             return
         if TAR_UNZIP_LIMIT is not None:
-            result = bot_utils.check_limit(size, TAR_UNZIP_LIMIT)
-            if result:
+            if result := bot_utils.check_limit(size, TAR_UNZIP_LIMIT):
                 msg = f'Failed, Tar/Unzip limit is {TAR_UNZIP_LIMIT}.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 sendMessage(msg, bot, update)
                 return

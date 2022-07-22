@@ -80,7 +80,7 @@ class MegaAppListener(MegaListener):
         LOGGER.error(f'Mega Request error in {error}')
         if not self.is_cancelled:
             self.is_cancelled = True
-            self.listener.onDownloadError("RequestTempError: " + error.toString())
+            self.listener.onDownloadError(f"RequestTempError: {error.toString()}")
         self.error = error.toString()
         self.continue_event.set()
 
@@ -171,7 +171,7 @@ class MegaDownloadHelper:
             LOGGER.info('Checking File/Folder if already in Drive')
             mname = node.getName()
             if listener.isTar:
-                mname = mname + ".zip" if listener.isZip else mname + ".tar"
+                mname = f"{mname}.zip" if listener.isZip else f"{mname}.tar"
             if not listener.extract:
                 gd = GoogleDriveHelper()
                 smsg, button = gd.drive_list(mname, True)
@@ -189,8 +189,7 @@ class MegaDownloadHelper:
             limit = MEGA_LIMIT
         if limit is not None:
             size = api.getSize(node)
-            result = check_limit(size, limit)
-            if result:
+            if result := check_limit(size, limit):
                 sendMessage(msg3, listener.bot, listener.update)
                 executor.continue_event.set()
                 return

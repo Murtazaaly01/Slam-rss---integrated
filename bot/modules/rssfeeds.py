@@ -12,7 +12,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 
 def cmd_rsshelp(update, context):
-    help_string=f"""
+    help_string = """
 <b>Commands:</b>
 • /rsshelp: <i>To get this message</i>
 • /feeds: <i>List your subscriptions</i>
@@ -21,14 +21,20 @@ def cmd_rsshelp(update, context):
 • /unsub Title: <i>Removes the RSS subscription corresponding to it's title</i>
 • /unsuball: <i>Removes all subscriptions</i>
 """
+
     update.effective_message.reply_text(help_string, parse_mode='HTMl')
 
 def cmd_rss_list(update, context):
     if bool(rss_dict):
-        list_feed = ""
-        for title, url_list in rss_dict.items():
-            list_feed +=f"Title: {title}\nFeed: {url_list[0]}\n\n"
-        update.effective_message.reply_text(f"<b>Your subscriptions:</b>\n\n" + list_feed, parse_mode='HTMl')
+        list_feed = "".join(
+            f"Title: {title}\nFeed: {url_list[0]}\n\n"
+            for title, url_list in rss_dict.items()
+        )
+
+        update.effective_message.reply_text(
+            f"<b>Your subscriptions:</b>\n\n{list_feed}", parse_mode='HTMl'
+        )
+
     else:
         update.effective_message.reply_text("No subscriptions.")
 
@@ -39,11 +45,13 @@ def cmd_get(update, context):
         feed_url = postgres.find(q)
         if feed_url is not None and count > 0:
             try:
-                item_info = ""
                 msg = update.effective_message.reply_text(f"Getting the last <b>{count}</b> item(s), please wait!", parse_mode='HTMl')
                 rss_d = feedparser.parse(feed_url[0])
-                for item_num in range(count):
-                    item_info +=f"<b>{rss_d.entries[item_num]['title']}</b>\n{rss_d.entries[item_num]['link']}\n\n"
+                item_info = "".join(
+                    f"<b>{rss_d.entries[item_num]['title']}</b>\n{rss_d.entries[item_num]['link']}\n\n"
+                    for item_num in range(count)
+                )
+
                 msg.edit_text(item_info, parse_mode='HTMl')
             except (IndexError, BadRequest):
                 msg.edit_text("Parse depth exceeded. Try again with a lower value.")
@@ -90,7 +98,7 @@ def init_feeds():
         try:
             rss_d = feedparser.parse(url_list[0])
             postgres.update(str(rss_d.entries[0]['link']), name, str(rss_d.entries[0]['title']))
-            LOGGER.info("Feed name: "+ name)
+            LOGGER.info(f"Feed name: {name}")
             LOGGER.info("Latest feed item: "+ rss_d.entries[0]['link'])
         except IndexError:
             LOGGER.info(f"There was an error while parsing this feed: {url_list[0]}")
@@ -128,7 +136,7 @@ def rss_monitor(context):
             LOGGER.info(f"There was an error while parsing this feed: {url_list[0]}")
             continue
         else:
-            LOGGER.info("Feed name: "+ name)
+            LOGGER.info(f"Feed name: {name}")
             LOGGER.info("Latest feed item: "+ rss_d.entries[0]['link'])
     postgres.rss_load()
     LOGGER.info('Database Updated.')

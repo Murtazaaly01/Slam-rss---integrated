@@ -71,16 +71,15 @@ class TgUploader:
                 duration = 0
                 if filee.upper().endswith(VIDEO_SUFFIXES):
                     metadata = extractMetadata(createParser(up_path))
-                    if metadata is not None:
-                        if metadata.has("duration"):
-                            duration = metadata.get("duration").seconds
+                    if metadata is not None and metadata.has("duration"):
+                        duration = metadata.get("duration").seconds
                     if thumb is None:
                         thumb = take_ss(up_path)
                         if self.is_cancelled:
                             os.remove(thumb)
                             return
                     if not filee.upper().endswith(("MKV", "MP4")):
-                        filee = os.path.splitext(filee)[0] + '.mp4'
+                        filee = f'{os.path.splitext(filee)[0]}.mp4'
                         new_path = os.path.join(dirpath, filee)
                         os.rename(up_path, new_path)
                         up_path = new_path
